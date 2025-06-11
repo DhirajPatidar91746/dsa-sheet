@@ -22,18 +22,26 @@ exports.addTopic = async (req, res) => {
 
 exports.updateProgress = async (req, res) => {
   const userId = req.user.id;
-  const { topicId, problemId } = req.body;
+  const { topicId, problemId, checked } = req.body;
 
   try {
     const user = await User.findById(userId);
-    const topicProgress = user.progress.find(p => p.topicId.toString() === topicId);
+    let topicProgress = user.progress.find(p => p.topicId.toString() === topicId);
 
-    if (topicProgress) {
+    if (!topicProgress) {
+      // If no progress exists for this topic, create it
+      topicProgress = { topicId, completedProblems: [] };
+      user.progress.push(topicProgress);
+    }
+
+    if (checked) {
+      // Add problem if not already completed
       if (!topicProgress.completedProblems.includes(problemId)) {
         topicProgress.completedProblems.push(problemId);
       }
     } else {
-      user.progress.push({ topicId, completedProblems: [problemId] });
+      // Remove problem if unchecked
+      topicProgress.completedProblems = topicProgress.completedProblems.filter(id => id !== problemId);
     }
 
     await user.save();

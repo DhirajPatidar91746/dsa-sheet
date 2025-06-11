@@ -10,6 +10,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 router.get('/', getTopics);
 router.post('/', authMiddleware, addTopic);
-router.post('/progress', authMiddleware, updateProgress);
+// Change POST to PATCH here for progress update
+router.patch('/progress', authMiddleware, updateProgress);
 
 module.exports = router;

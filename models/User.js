@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, index: true },
@@ -7,18 +7,21 @@ const UserSchema = new mongoose.Schema({
   progress: [
     {
       topicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Topic' },
-      completedProblems: [{ type: String }] // Store IDs or names of completed problems
+      completedProblems: [{ type: String }]
     }
   ]
 });
 
-// Hash password before saving
+// Pre-save middleware to hash password if modified or new
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
+// Instance method to compare entered password with hashed password
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
